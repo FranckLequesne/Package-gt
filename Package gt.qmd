@@ -1,0 +1,235 @@
+---
+title: "Le package gt"
+
+author: "Franck"
+format: 
+  html:
+    toc: true  # Table des matières
+    toc-depth: 2  # Profondeur de la table des matières
+    toc-location: left  # Position de la table des matières (left, right)
+    toc-title: "Table des matières"  # Titre de la table des matières
+    number-sections: true  # Numérotation des sections
+    navigation:
+      menu:
+        - text: "Home"
+          href: index.qmd
+        - text: "Section 1"
+          submenu:
+            - text: "Subsection 1.1"
+              href: section1_1.qmd
+            - text: "Subsection 1.2"
+              href: section1_2.qmd
+        - text: "Section 2"
+          href: section2.qmd
+    theme:
+      light: flatly
+      dark: darkly
+    css: styles.css
+    includes:
+      in-header: header.html
+      in-body: body.html
+editor: visual
+---
+
+# Introduction
+
+Le package `gt` a été conçu pour simplifier la création de tableaux. La syntaxe est plutôt simple et intuitive et s'intégre particulièrement bien dans la production de rapports en markdown ou quarto.
+
+La création de tableaux repose sur l'approche de type "pipeline" (%\>%) ce qui rend le code lisible et sans doute plus facile à maintenir.
+
+Il existe de nombreuses options pour personnaliser les tableaux (notamment le formatage des chiffres qui est hyper simple).
+
+Les tableaux `gt` peuvent être facilement intégrés dans des documents HTML, LaTeX, Word...
+
+## Constitution d'un dataframe fictif
+
+```{r, message=F}
+
+library(tidyverse)
+library(gt)
+
+regions <- data.frame(
+  Regions = c("Auvergne-Rhône-Alpes", "Bourgogne-Franche-Comté", "Bretagne", 
+             "Centre-Val de Loire", "Corse", "Grand Est", "Hauts-de-France", 
+             "Île-de-France", "Normandie", "Nouvelle-Aquitaine", 
+             "Occitanie", "Pays de la Loire", "Provence-Alpes-Côte d'Azur"),
+  Population = c(8047384, 2804190, 3340379, 2548000, 344679, 5511749, 
+                 5993463, 12278210, 3288750, 6054076, 5984192, 3889781, 5081183),
+  Surface = c(69711, 47784, 27208, 39151, 8680, 57433, 31813, 12011, 29907, 
+              84061, 72724, 32082, 31400)  # Surface en kilomètres carrés
+)
+
+
+```
+
+# Quelques exemples d'utilisation
+
+## Le cas le plus simple (et le résultat est déjà plutôt pas mal)
+
+```{r, message =F}
+
+regions %>% 
+  gt()
+
+
+```
+
+## Ajout d'un titre et d'un sous-titre
+
+```{r, message=F}
+
+regions %>%
+  gt() %>%
+    tab_header(title = md("Populations légales **au 1er janvier 2021**"), # **xxxx** permet le caractère gras en markdown
+               subtitle = md("dans les régions de France métropolitaine`"))
+```
+
+## Ajout d'une source
+
+```{r, message =F}
+
+regions %>%
+  gt() %>%
+    tab_header(title = md("Populations légales **au 1er janvier 2021**"),
+               subtitle = md("dans les régions de France métropolitaine`")) %>% 
+  tab_footnote(
+    footnote = "Source: Insee, recensements de la population")
+  
+```
+
+## Ajout d'une note de bas de page
+
+```{r, message=F}
+
+
+regions %>%
+  gt() %>%
+    tab_header(title = md("Populations légales **au 1er janvier 2021**"),
+               subtitle = md("dans les régions de France métropolitaine`")) %>% 
+  tab_footnote(
+    footnote = "Notre région !",
+    locations = cells_body(columns = Regions, rows = 7)
+  ) %>% 
+  tab_source_note(
+    source_note = "Source: Insee, recensements de la population"
+  ) 
+```
+
+## Formatage des données, exemple avec le séparateur de milliers
+
+```{r, message=F}
+
+regions %>%
+  gt() %>%
+    tab_header(title = md("Populations légales **au 1er janvier 2021**"),
+               subtitle = md("dans les régions de France métropolitaine`")) %>% 
+  fmt_number(
+    columns = c(Population,Surface),
+    decimals = 0,  # Nombre de décimales
+    use_seps = TRUE,  # Utiliser ou non des séparateurs de milliers
+    sep_mark = " ",  # Définition du séparateur de milliers comme un espace
+    dec_mark = ","  # Définition du séparateur décimal (ici, une virgule)
+  ) %>% 
+   tab_spanner(        # ajout d'en-têtes de colonnes (spanners) regroupant plusieurs colonnes
+    label = "Territoires",
+    columns = c(Regions)) %>%
+  tab_spanner(
+    label = "Données",
+    columns = c(Population, Surface)
+  ) %>% 
+   tab_footnote(
+    footnote = "Notre région !",
+    locations = cells_body(columns = Regions, rows = 7)
+  ) %>% 
+  tab_source_note(
+    source_note = "Source: Insee, recensements de la population"
+  )
+```
+
+## Un peu d'interactivité
+
+```{r, message = F}
+
+regions %>%
+  gt() %>%
+    tab_header(title = md("Populations légales **au 1er janvier 2021**"),
+               subtitle = md("dans les régions de France métropolitaine`")) %>% 
+  fmt_number(
+    columns = c(Population,Surface),
+    decimals = 0,  # Nombre de décimales
+    use_seps = TRUE,  # Utiliser ou non des séparateurs de milliers
+    sep_mark = " ",  # Définition du séparateur de milliers comme un espace
+    dec_mark = ","  # Définition du séparateur décimal (ici, une virgule)
+  ) %>% 
+   tab_spanner(
+    label = "Territoires",
+    columns = c(Regions)) %>%
+  tab_spanner(
+    label = "Données",
+    columns = c(Population, Surface)
+  ) %>% 
+   tab_footnote(
+    footnote = "Notre région !",
+    locations = cells_body(columns = Regions, rows = 7)
+  ) %>% 
+  tab_source_note(
+    source_note = "Source: Insee, recensements de la population"
+  ) %>% 
+  opt_interactive()
+
+# /!\ opt_interactivite() supprime la mise en forme du header (ici du tab_spanner) du tableau (qui n’est pas conciliable avec l’interactivité).
+
+```
+
+## Habillage des cellules
+
+```{r, message=F}
+
+regions %>%
+  gt() %>%
+    tab_header(title = md("Populations légales **au 1er janvier 2021**"),
+               subtitle = md("dans les régions de France métropolitaine`")) %>% 
+  fmt_number(
+    columns = c(Population,Surface),
+    decimals = 0,  # Nombre de décimales
+    use_seps = TRUE,  # Utiliser ou non des séparateurs de milliers
+    sep_mark = " ",  # Définition du séparateur de milliers comme un espace
+    dec_mark = ","  # Définition du séparateur décimal (ici, une virgule)
+  ) %>% 
+   tab_spanner(
+    label = "Territoires",
+    columns = c(Regions)) %>%
+  tab_spanner(
+    label = "Données",
+    columns = c(Population, Surface)
+  ) %>% 
+   tab_footnote(
+    footnote = "Notre région !",
+    locations = cells_body(columns = Regions, rows = 7)
+  ) %>% 
+  tab_source_note(
+    source_note = "Source: Insee, recensements de la population"
+  )%>%
+  tab_style(
+    style = list(
+      cell_fill(color = "lightblue")  # Définir la couleur de fond des libellés de colonnes
+    ),
+    locations = cells_column_labels(everything())  # Appliquer le style aux libellés de colonnes
+  ) %>%
+  tab_style(
+    style = list(
+      cell_fill(color = "lightgreen")  # Définir la couleur de fond des regroupements de colonnes
+    ),
+    locations = cells_column_spanners(everything())  # Appliquer le style aux regroupements de colonnes
+  ) %>% 
+    tab_style(
+    style = list(
+      cell_fill(color = "lightyellow")  # Définir la couleur de fond des cellules de la ligne
+    ),
+    locations = cells_body(
+      columns = everything(),  # Appliquer à toutes les colonnes
+      rows = 7  # Appliquer à la deuxième ligne (par exemple, Germany)
+    )
+  )
+
+```
