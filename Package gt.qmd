@@ -1,9 +1,9 @@
 ---
 title: "Le package gt"
-
 author: "Franck"
 format: 
   html:
+    self-contained: true  # Générer un fichier HTML autonome
     toc: true  # Table des matières
     toc-depth: 2  # Profondeur de la table des matières
     toc-location: left  # Position de la table des matières (left, right)
@@ -115,14 +115,14 @@ regions %>%
   ) 
 ```
 
-## Formatage des données, exemple avec le séparateur de milliers
+## Formatage des données, exemple avec le séparateur de milliers et ajout d'en-têtes de colonnes
 
 ```{r, message=F}
 
 regions %>%
   gt() %>%
     tab_header(title = md("Populations légales **au 1er janvier 2021**"),
-               subtitle = md("dans les régions de France métropolitaine`")) %>% 
+               subtitle = md("dans les régions de France métropolitaine")) %>% 
   fmt_number(
     columns = c(Population,Surface),
     decimals = 0,  # Nombre de décimales
